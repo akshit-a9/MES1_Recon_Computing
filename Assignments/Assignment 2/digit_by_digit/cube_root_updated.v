@@ -29,7 +29,7 @@ module cube_root(
             rem       = (rem << 3) | curr_bits;
 
             // trial = 3*root*(root+1) + 1
-            trial = (3 * root * (root + 1)) + 1;
+            trial = ((3*root*root) + (3*root) + 1) << (bit_index/3);
 
             if (rem >= trial) begin
                 rem  = rem - trial;
