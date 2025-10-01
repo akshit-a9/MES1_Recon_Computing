@@ -43,7 +43,7 @@ begin
         end
         else if(pipeline_stage == 1)
         begin
-            trial = (3 * (aval^2) + 3 * aval + 1);
+            trial <= (((aval << 1) + aval) * (aval + 1)) + 1;
             pipeline_stage <= 2'd2;
         end
         else
@@ -66,22 +66,14 @@ begin
             else
                 bit_index <= bit_index - 3;
                 
-            if (bit_index <= 3) begin
-                bit_index <= 0;
-                root_done <= 1;
-                number_out <= cube_val;  // latch only at end
-            end else begin
-                bit_index <= bit_index - 3;
-            end
-
+            number_out <= cube_val;
             pipeline_stage <= 0;
-
         end
     end
     else if(root_done == 1)
     begin
         root_done <= 0;
-        //number_out <= {number_out, 11'd0};
+        number_out <= {number_out, 11'd0};
     end
 end
 endmodule
