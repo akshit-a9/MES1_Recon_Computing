@@ -16,9 +16,9 @@ module cube_root(
 
     // Combinational helpers
     wire [2:0]  grp        = (N_pad >> bitptr) & 3'b111;       // next 3 MSB bits
-    wire [12:0] A          = {y,1'b0};                         // A = y << 1
+    //wire [12:0] A          = {y,1'b0};                         // A = y << 1
     // trial = 3*A*(A+1) + 1 = 12*y^2 + 6*y + 1 (fits in < 28 bits; keep 32)
-    wire [31:0] trial_w    = ( (A * (A + 13'd1)) * 32'd3 ) + 32'd1;
+    wire [31:0] trial_w = (3 * y * (y + 1)) + 1;
     wire [35:0] rem_shift  = (rem << 3) | grp;
     wire        take_one   = (rem_shift >= trial_w);
 
