@@ -1,54 +1,39 @@
-// Integer cube root (digit-by-digit, base-2) for a 32-bit unsigned input.
-// Produces the truncated integer cube root (no scaling, no fractional part).
-module cube_root(
+module cube_root (
     input  wire        clk,
     input  wire        reset,
     input  wire [31:0] number_in,
-    output reg  [31:0] number_out
+    output reg  [11:0] root,        // 12 bits are enough for 32-bit input
+    output reg         done
 );
 
-    // Internal state
-    reg  [35:0] N_pad;        // {2'b00, number_in, 2'b00} → 12 groups of 3 bits
-    reg  [35:0] rem;          // running remainder
-    reg  [11:0] y;            // cube root being built (up to 12 bits for 36-bit operand)
-    reg  [5:0]  bitptr;       // starts at 33, steps down by 3 (33,30,...,0)
-    reg         done;
-
-    // Combinational helpers
-    wire [2:0]  grp        = (N_pad >> bitptr) & 3'b111;       // next 3 MSB bits
-    //wire [12:0] A          = {y,1'b0};                         // A = y << 1
-    // trial = 3*A*(A+1) + 1 = 12*y^2 + 6*y + 1 (fits in < 28 bits; keep 32)
-    wire [31:0] trial_w = (3 * y * (y + 1)) + 1;
-    wire [35:0] rem_shift  = (rem << 3) | grp;
-    wire        take_one   = (rem_shift >= trial_w);
-
-    // Next-state for y and rem
-    wire [11:0] y_next     = {y, take_one};
-    wire [35:0] rem_next   = take_one ? (rem_shift - trial_w) : rem_shift;
+    reg [35:0] N_pad;
+    reg [35:0] rem;
+    reg [5:0]  bit_index;
 
     always @(posedge clk or posedge reset) begin
         if (reset) begin
-            // Load operand and initialize state
-            N_pad      <= {2'b00, number_in, 2'b00};
-            rem        <= 36'd0;
-            y          <= 12'd0;
-            bitptr     <= 6'd33;        // 12 groups: 33,30,...,0
-            done       <= 1'b0;
-            number_out <= 32'd0;
-        end else begin
-            if (!done) begin
-                // One digit (bit) of the cube root per cycle
-                rem <= rem_next;
-                y   <= y_next;
+            N_pad     <= {2'b00, number_in, 2'b00};
+            rem       <= 0;
+            root      <= 0;
+            bit_index <= 6'd33;   // start at MSB group
+            done      <= 0;
+        end else if (!done) begin
+            // bring down next 3 bits
+            rem <= (rem << 3) | ((N_pad >> bit_index) & 3'b111);
 
-                if (bitptr == 6'd0) begin
-                    done       <= 1'b1;
-                    number_out <= {20'd0, y_next}; // final root (unscaled)
-                end else begin
-                    bitptr <= bitptr - 6'd3;
-                end
+            // compute trial = 3*root*(root+1) + 1
+            // root is current partial result
+            if (( (3*root*(root+1)) + 1 ) <= ((rem << 3) | ((N_pad >> bit_index) & 3'b111))) begin
+                rem  <= ( (rem << 3) | ((N_pad >> bit_index) & 3'b111) ) - (3*root*(root+1) + 1);
+                root <= (root << 1) | 1;
+            end else begin
+                root <= (root << 1);
             end
-            // else: hold final result
+
+            if (bit_index == 0)
+                done <= 1;
+            else
+                bit_index <= bit_index - 3;
         end
     end
 endmodule
