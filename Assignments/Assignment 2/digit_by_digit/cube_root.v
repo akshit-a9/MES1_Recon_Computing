@@ -43,7 +43,7 @@ begin
         end
         else if(pipeline_stage == 1)
         begin
-            trial <= (((aval << 1) + aval) * (aval + 1)) + 1;
+            trial = (3 * (aval^2) + 3 * aval + 1);
             pipeline_stage <= 2'd2;
         end
         else
