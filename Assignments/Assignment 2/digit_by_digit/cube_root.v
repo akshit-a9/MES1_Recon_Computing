@@ -66,14 +66,22 @@ begin
             else
                 bit_index <= bit_index - 3;
                 
-            number_out <= cube_val;
+            if (bit_index <= 3) begin
+                bit_index <= 0;
+                root_done <= 1;
+                number_out <= cube_val;  // latch only at end
+            end else begin
+                bit_index <= bit_index - 3;
+            end
+
             pipeline_stage <= 0;
+
         end
     end
     else if(root_done == 1)
     begin
         root_done <= 0;
-        number_out <= {number_out, 11'd0};
+        //number_out <= {number_out, 11'd0};
     end
 end
 endmodule
