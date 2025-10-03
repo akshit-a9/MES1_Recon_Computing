@@ -79,10 +79,3 @@ begin
     end
 end
 endmodule
-
-vio_0 vio_inst (
-    .clk(clk),                       
-    .probe_in0(number_out),          
-    .probe_out0(number_in),          
-    .probe_out1(reset)      
-);
